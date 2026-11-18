@@ -1,0 +1,99 @@
+================================================================================
+FLAGSMITH YAML GITOPS CLI - FEATURE SPECIFICATION & TASK LIST
+================================================================================
+Vision: Declarative, Prisma/Drizzle-style bi-directional synchronization and 
+drift-aware GitOps management for Flagsmith feature flags.
+
+================================================================================
+PHASE 1: CLI FOUNDATION & CONFIGURATION
+================================================================================
+[x] CLI Scaffolding & Turborepo Monorepo Setup
+    - TypeScript/Node.js Turborepo with npm workspaces.
+    - Setup argument parsing via Commander, colored terminal formatting (picocolors).
+    - Read Flagsmith credentials from environment variables / flags:
+      * FLAGSMITH_API_KEY (Admin / Master API key)
+      * FLAGSMITH_API_URL (Support default SaaS + custom self-hosted endpoints)
+      * FLAGSMITH_PROJECT_ID
+
+[x] Configuration & Remote Sync
+    - Zero lockfile clutter: direct 2-way diffing between local `flagsmith.yaml` and live Flagsmith API.
+
+================================================================================
+PHASE 2: DECLARATIVE YAML SCHEMA SPECIFICATION
+================================================================================
+[x] YAML Schema Design (`flags.yaml`)
+    - Project headers (version: 1, project.id, project.name).
+    - Standard Boolean Flags:
+      * key, description, default_enabled state.
+    - Multivariate Flags & Experiment Metrics:
+      * string, integer, boolean values with percentage allocations summing to 100%.
+      * Native `target_metric` specification (name, description, aggregation, direction)
+        matching Flagsmith's Experimentation API.
+    - Multi-Environment Overrides:
+      * Environment-specific state (`development`, `staging`, `production`).
+    - Metadata flags:
+      * `archived` state.
+
+[x] Schema Validator & Linter (`fm validate`)
+    - Offline linting against Zod schema.
+    - Checks for duplicate flag keys, invalid percentage rollouts (sum != 100%),
+      and missing required fields before hitting the API.
+
+================================================================================
+PHASE 3: CORE COMMANDS (PRISMA/DRIZZLE MODEL)
+================================================================================
+[x] Command: `fm init`
+    - Interactive CLI setup wizard using @clack/prompts:
+      * Authenticates with Flagsmith.
+      * Prompts to select Project & Environments.
+      * Generates initial boilerplate `flags.yaml` or triggers initial `fm pull`.
+      * Offers to save credentials to local .env.
+
+[x] Command: `fm pull` (Introspect / Reverse-Sync)
+    - Equivalent to `prisma db pull`.
+    - Fetches the current live state of all features and environments from Flagsmith API.
+    - Serializes live state cleanly into formatted `flagsmith.yaml`.
+
+[x] Command: `fm diff` (or `fm status`)
+    - Equivalent to `prisma migrate diff` / `git diff`.
+    - Performs direct 2-way comparison: Local `flagsmith.yaml` vs Live Flagsmith API.
+    - Terminal UI with syntax highlighting:
+      * [+] Green: Flags/overrides to create.
+      * [~] Yellow: Flags/rules with modified values or toggles.
+      * [?] Dim: Untracked remote flags.
+      * [-] Red: Flags marked for removal/pruning.
+
+[x] Command: `fm apply` (or `fm push`)
+    - Equivalent to `prisma db push` / `kubectl apply`.
+    - Reconciles desired state from `flagsmith.yaml` to Flagsmith Management API.
+    - Dry-run mode (`--dry-run`) to preview mutations without applying.
+    - Auto-confirm mode (`-y` / `--yes` / `--force`) for non-interactive execution.
+    - Safe pruning strategy: non-destructive by default; absent flags in YAML are preserved unless `--prune` is passed.
+
+================================================================================
+PHASE 4: TWO-WAY RECONCILIATION ENGINE
+================================================================================
+[x] Direct 2-Way Diff & Reconcile Engine
+    - Direct comparison between desired local YAML state and live remote project state.
+    - Accurately computes additions, in-place updates, environment overrides, and untracked flags.
+
+[x] Interactive Terminal Confirmation
+    - When running `fm apply` in interactive mode:
+      * Show clear breakdown of operations.
+      * Interactive confirmation prompt before mutations execute.
+      * Bypass option (`-y`, `--yes`, `--force`) for CI or scripted environments.
+
+[x] Safe Pruning Strategy
+    - Non-destructive by default: absent flags in YAML are preserved as untracked unless `--prune` is passed.
+
+================================================================================
+PHASE 5: TESTING & DISTRIBUTION
+================================================================================
+[x] Core Engine Unit Test Suite (7/7 passing)
+    - Parser validation, duplicate key checks, multivariate percentage rules.
+    - Experiment target metric schema and validation.
+    - Reconciler plan calculations (creates, environment updates).
+[x] Live Flagsmith API Integration Testing (with live Screenly project)
+[x] Executable Packaging via `npm link` / `npx @sahilgupta09/flagsmith`
+    - Globally installed and linked as `fm`.
+================================================================================

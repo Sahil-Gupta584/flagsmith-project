@@ -1,0 +1,117 @@
+# Flagsmith GitOps Manifest
+version: 1
+project:
+  id: 1042
+  name: "B2B SaaS Platform"
+
+flags:
+  - key: maintenance_mode
+    description: "Emergency kill-switch: Displays scheduled maintenance banner & halts writes"
+    type: STANDARD
+    default_enabled: false
+    value: null
+    variants: []
+    environments:
+      development:
+        enabled: false
+        value: null
+      production:
+        enabled: false
+        value: null
+    archived: false
+
+  - key: new_billing_portal
+    description: "Self-serve Stripe billing & subscription tier upgrade management"
+    type: STANDARD
+    default_enabled: false
+    value: null
+    variants: []
+    environments:
+      development:
+        enabled: true
+        value: null
+      production:
+        enabled: false
+        value: null
+    archived: false
+
+  - key: workspace_team_invites
+    description: "Multi-user collaboration: Invite teammates and assign RBAC roles"
+    type: STANDARD
+    default_enabled: true
+    value: null
+    variants: []
+    environments:
+      development:
+        enabled: true
+        value: null
+      production:
+        enabled: true
+        value: null
+    archived: false
+
+  - key: api_rate_limit_rpm
+    description: "Remote config: Maximum API requests per minute allowed per tenant"
+    type: STANDARD
+    default_enabled: true
+    value: 120
+    variants: []
+    environments:
+      development:
+        enabled: true
+        value: 120
+      production:
+        enabled: true
+        value: 600
+    archived: false
+
+  - key: sso_saml_login
+    description: "Enterprise Single Sign-On (SAML/Okta/Google Workspace integration)"
+    type: STANDARD
+    default_enabled: false
+    value: null
+    variants: []
+    environments:
+      development:
+        enabled: true
+        value: null
+      production:
+        enabled: false
+        value: null
+    archived: false
+
+  - key: onboarding_checklist
+    description: "User activation: Step-by-step onboarding tour for new accounts"
+    type: STANDARD
+    default_enabled: true
+    value: null
+    variants: []
+    environments:
+      development:
+        enabled: true
+        value: null
+      production:
+        enabled: true
+        value: null
+    archived: false
+
+  - key: navigation_redesign
+    description: "A/B Experiment: Collapsible sidebar navigation vs Classic topbar"
+    type: MULTIVARIATE
+    default_enabled: true
+    value: "sidebar"
+    target_metric:
+      name: feature_discovery_rate
+      description: "User engagement: Discovered and adopted 2+ deep features"
+      aggregation: occurrence
+      direction: up
+    variants:
+      - value: "sidebar"
+        percentage: 50
+      - value: "topbar"
+        percentage: 50
+    environments:
+      production:
+        enabled: true
+        value: "sidebar"
+    archived: false

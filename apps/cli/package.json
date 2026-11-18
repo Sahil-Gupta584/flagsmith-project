@@ -1,0 +1,29 @@
+{
+  "name": "@sahilgupta09/flagsmith",
+  "version": "0.1.0",
+  "description": "Declarative GitOps and bi-directional synchronization CLI for Flagsmith",
+  "bin": {
+    "fm": "./dist/index.js"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node ./dist/index.js"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.1",
+    "@repo/api-client": "*",
+    "@repo/core": "*",
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "*",
+    "@types/node": "^22.13.1",
+    "typescript": "^5.7.3"
+  }
+}
+

@@ -1,0 +1,190 @@
+{
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "default": 1,
+      "description": "Flagsmith YAML schema version (default: 1)"
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Flagsmith Project ID (0 indicates unlinked placeholder)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Flagsmith Project Name for readability"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false,
+      "description": "Flagsmith project metadata"
+    },
+    "flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique identifier of the feature flag (e.g. checkout_v2, maintenance_mode)"
+          },
+          "description": {
+            "type": "string",
+            "default": "",
+            "description": "Human-readable description explaining the purpose of this flag"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "STANDARD",
+              "MULTIVARIATE"
+            ],
+            "default": "STANDARD",
+            "description": "Flag type: STANDARD (simple toggle/remote config) or MULTIVARIATE (A/B experiment)"
+          },
+          "default_enabled": {
+            "type": "boolean",
+            "default": false,
+            "description": "Default baseline state across all environments before overrides"
+          },
+          "value": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ],
+            "description": "Default remote configuration value before overrides",
+            "default": null
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "Variant value served to clients"
+                },
+                "percentage": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Percentage of traffic allocated to this variant (0-100)"
+                }
+              },
+              "required": [
+                "value",
+                "percentage"
+              ],
+              "additionalProperties": false,
+              "description": "Traffic split variant for multivariate experiments"
+            },
+            "default": [],
+            "description": "Traffic split variants for MULTIVARIATE experiment flags (must sum to 100%)"
+          },
+          "target_metric": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Unique name of the experiment metric event (e.g. signup_completed)"
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of the business outcome measured"
+              },
+              "aggregation": {
+                "type": "string",
+                "enum": [
+                  "occurrence",
+                  "count",
+                  "sum",
+                  "mean"
+                ],
+                "default": "occurrence",
+                "description": "How Flagsmith computes the metric (occurrence, count, sum, mean)"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down",
+                  "informational"
+                ],
+                "default": "up",
+                "description": "Expected direction of improvement (up: higher is better, down: lower is better, informational)"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false,
+            "description": "Flagsmith target experiment metric"
+          },
+          "environments": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Whether the flag is enabled in this environment"
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "Environment-specific remote config override value",
+                  "default": null
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "additionalProperties": false,
+              "description": "Environment-specific flag state and value overrides"
+            },
+            "default": {},
+            "description": "Environment-specific overrides (e.g. Production: { enabled: true })"
+          },
+          "archived": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this feature flag is archived"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "additionalProperties": false,
+        "description": "Feature flag or experiment definition"
+      },
+      "description": "List of declared feature flags, remote configurations, and multivariate experiments"
+    }
+  },
+  "required": [
+    "project",
+    "flags"
+  ],
+  "additionalProperties": false,
+  "description": "Declarative Flagsmith feature flag and experiment manifest (flagsmith.yaml)",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Flagsmith YAML Manifest"
+}
