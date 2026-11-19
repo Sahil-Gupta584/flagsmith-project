@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises';
 import YAML from 'yaml';
-import { FlagsManifestSchema, type FlagsManifest } from './schema.js';
+import { FlagsManifestSchema, FLAGSMITH_SCHEMA_URL, type FlagsManifest } from './schema.js';
 
 export interface ParseResult {
   success: boolean;
@@ -79,6 +79,7 @@ export async function readFlagsManifest(filePath: string): Promise<ParseResult> 
 export function serializeFlagsManifest(manifest: FlagsManifest): string {
   const doc = new YAML.Document(manifest);
   doc.commentBefore =
+    ` yaml-language-server: $schema=${FLAGSMITH_SCHEMA_URL}\n` +
     ' Run "fm diff" to preview or "fm apply" to push changes';
   return doc.toString({ indent: 2 });
 }

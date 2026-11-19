@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://cdn.jsdelivr.net/gh/Sahil-Gupta584/flagsmith-project@main/flagsmith.schema.json
 # Run "fm diff" to preview or "fm apply" to push changes
 
 version: 1

@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://cdn.jsdelivr.net/gh/Sahil-Gupta584/flagsmith-project@main/flagsmith.schema.json
 # Flagsmith GitOps Manifest
 version: 1
 project:

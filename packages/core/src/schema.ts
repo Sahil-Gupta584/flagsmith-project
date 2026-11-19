@@ -56,6 +56,9 @@ export type FlagDefinitionInput = z.input<typeof FlagDefinitionSchema>;
 export type FlagsManifest = z.infer<typeof FlagsManifestSchema>;
 export type FlagsManifestInput = z.input<typeof FlagsManifestSchema>;
 
+export const FLAGSMITH_SCHEMA_URL =
+  'https://cdn.jsdelivr.net/gh/Sahil-Gupta584/flagsmith-project@main/flagsmith.schema.json';
+
 export function getFlagsManifestJsonSchema(): Record<string, unknown> {
   const schema = zodToJsonSchema(FlagsManifestSchema, {
     $refStrategy: 'none',

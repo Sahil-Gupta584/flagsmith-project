@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   computePlan,
   parseYamlContent,
+  serializeFlagsManifest,
   type FlagsManifest,
 } from '../src/index.js';
 import type { Environment, Feature, FeatureState } from '@repo/api-client';
@@ -85,6 +86,17 @@ flags:
   assert.equal(res.data?.flags[0].target_metric?.name, 'search_clickthrough_rate');
   assert.equal(res.data?.flags[0].target_metric?.aggregation, 'occurrence');
   assert.equal(res.data?.flags[0].target_metric?.direction, 'up');
+});
+
+test('YAML Serializer - includes schema directive for IDE autocomplete', () => {
+  const manifest: FlagsManifest = {
+    version: 1,
+    project: { id: 100 },
+    flags: [],
+  };
+  const yaml = serializeFlagsManifest(manifest);
+  assert.match(yaml, /^# yaml-language-server: \$schema=https:\/\/cdn\.jsdelivr\.net\//);
+  assert.match(yaml, /# Run "fm diff" to preview/);
 });
 
 test('Reconciler - detects new feature to create', () => {
