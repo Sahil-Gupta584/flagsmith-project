@@ -36,12 +36,10 @@ export function getTemplateFlags(
           direction: 'down',
         },
         variants: [
-          { value: 'gemini-2.0-flash', percentage: 70 },
           { value: 'gpt-4o-mini', percentage: 30 },
         ],
         environments: environmentOverrides(environments, () => ({
           enabled: true,
-          value: 'gemini-2.0-flash',
         })),
         archived: false,
       },
@@ -113,45 +111,42 @@ export function getTemplateFlags(
     ];
   }
 
-  // 2. Universal B2B / SaaS Product (Applies to ANY SaaS: Billing, Multi-tenancy, Quotas, SSO)
+  // 2. Universal B2B / SaaS Product (Applies to ANY SaaS: Access, Quotas, SSO, Activation)
   if (template === 'saas') {
     return [
       {
         key: 'maintenance_mode',
-        description: 'Emergency kill-switch: Displays scheduled maintenance banner & halts writes',
+        description: 'Emergency kill-switch: Displays a maintenance banner and blocks writes',
         type: 'STANDARD',
         default_enabled: false,
         value: null,
         variants: [],
         environments: environmentOverrides(environments, () => ({
           enabled: false,
-          value: null,
         })),
         archived: false,
       },
       {
-        key: 'new_billing_portal',
-        description: 'Self-serve Stripe billing & subscription tier upgrade management',
-        type: 'STANDARD',
-        default_enabled: false,
-        value: null,
-        variants: [],
-        environments: environmentOverrides(environments, (env) => ({
-          enabled: !isProduction(env.name),
-          value: null,
-        })),
-        archived: false,
-      },
-      {
-        key: 'workspace_team_invites',
-        description: 'Multi-user collaboration: Invite teammates and assign RBAC roles',
+        key: 'email_verification_required',
+        description: 'Require new users to verify their email before accessing the workspace',
         type: 'STANDARD',
         default_enabled: true,
         value: null,
         variants: [],
         environments: environmentOverrides(environments, () => ({
           enabled: true,
-          value: null,
+        })),
+        archived: false,
+      },
+      {
+        key: 'team_invites_enabled',
+        description: 'Allow workspace admins to invite teammates',
+        type: 'STANDARD',
+        default_enabled: true,
+        value: null,
+        variants: [],
+        environments: environmentOverrides(environments, () => ({
+          enabled: true,
         })),
         archived: false,
       },
@@ -169,50 +164,46 @@ export function getTemplateFlags(
         archived: false,
       },
       {
-        key: 'sso_saml_login',
-        description: 'Enterprise Single Sign-On (SAML/Okta/Google Workspace integration)',
+        key: 'sso_enabled',
+        description: 'Enterprise Single Sign-On (SAML/OIDC) login',
         type: 'STANDARD',
         default_enabled: false,
         value: null,
         variants: [],
         environments: environmentOverrides(environments, (env) => ({
           enabled: !isProduction(env.name),
-          value: null,
         })),
         archived: false,
       },
       {
         key: 'onboarding_checklist',
-        description: 'User activation: Step-by-step onboarding tour for new accounts',
+        description: 'User activation: Step-by-step onboarding checklist for new accounts',
         type: 'STANDARD',
         default_enabled: true,
         value: null,
         variants: [],
         environments: environmentOverrides(environments, () => ({
           enabled: true,
-          value: null,
         })),
         archived: false,
       },
       {
-        key: 'navigation_redesign',
-        description: 'A/B Experiment: Collapsible sidebar navigation vs Classic topbar',
+        key: 'hero_headline',
+        description: 'Landing page A/B experiment: control headline vs a benefit-led headline',
         type: 'MULTIVARIATE',
         default_enabled: true,
-        value: 'sidebar',
+        value: 'Ship features faster',
         target_metric: {
-          name: 'feature_discovery_rate',
-          description: 'User engagement: Discovered and adopted 2+ deep features',
+          name: 'signup_completed',
+          description: 'Visitor completed account signup',
           aggregation: 'occurrence',
           direction: 'up',
         },
         variants: [
-          { value: 'sidebar', percentage: 50 },
-          { value: 'topbar', percentage: 50 },
+          { value: 'Launch with confidence', percentage: 50 },
         ],
         environments: environmentOverrides(environments, () => ({
           enabled: true,
-          value: 'sidebar',
         })),
         archived: false,
       },
@@ -261,12 +252,10 @@ export function getTemplateFlags(
           direction: 'up',
         },
         variants: [
-          { value: 'collaborative', percentage: 50 },
           { value: 'trending', percentage: 50 },
         ],
         environments: environmentOverrides(environments, () => ({
           enabled: true,
-          value: 'collaborative',
         })),
         archived: false,
       },

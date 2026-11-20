@@ -46,7 +46,7 @@ export async function initCommand(): Promise<void> {
         {
           value: 'saas',
           label: '💼 Universal B2B / SaaS Product (Recommended)',
-          hint: 'Maintenance kill-switch, billing, rate limits, team invites & navigation A/B test',
+          hint: 'Maintenance kill-switch, email verification, rate limits, team invites & headline A/B test',
         },
         {
           value: 'ai',
@@ -238,7 +238,7 @@ export async function initCommand(): Promise<void> {
         {
           value: 'saas',
           label: '💼 B2B / SaaS Product (Recommended)',
-          hint: 'Maintenance kill-switch, billing portal, rate limits & onboarding',
+          hint: 'Maintenance kill-switch, email verification, rate limits & onboarding',
         },
         {
           value: 'ai',

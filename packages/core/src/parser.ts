@@ -41,12 +41,40 @@ export function parseYamlContent(content: string): ParseResult {
     }
     keysSeen.add(flag.key);
 
-    if (flag.type === 'MULTIVARIATE' && flag.variants && flag.variants.length > 0) {
-      const totalPct = flag.variants.reduce((sum, v) => sum + v.percentage, 0);
-      if (Math.abs(totalPct - 100) > 0.01) {
+    if (flag.type !== 'MULTIVARIATE' && flag.variants.length > 0) {
+      semanticErrors.push(
+        `Flag '${flag.key}' has variants but type is STANDARD; set type: MULTIVARIATE`
+      );
+    }
+
+    if (flag.type === 'MULTIVARIATE') {
+      if (flag.variants.length === 0) {
         semanticErrors.push(
-          `Flag '${flag.key}' variants allocation total must equal 100%, got ${totalPct}%`
+          `Flag '${flag.key}' is MULTIVARIATE but has no variants; define at least one challenger`
         );
+      } else {
+        const totalPct = flag.variants.reduce((sum, v) => sum + v.percentage, 0);
+        if (totalPct > 100.01) {
+          semanticErrors.push(
+            `Flag '${flag.key}' variants allocation total must not exceed 100%, got ${totalPct}% (the control receives the remainder)`
+          );
+        }
+
+        const variantValues = new Set<string>();
+        for (const variant of flag.variants) {
+          const serializedValue = JSON.stringify(variant.value);
+          if (variant.value === flag.value) {
+            semanticErrors.push(
+              `Flag '${flag.key}' variant value ${serializedValue} duplicates the control value`
+            );
+          }
+          if (variantValues.has(serializedValue)) {
+            semanticErrors.push(
+              `Flag '${flag.key}' has duplicate variant value ${serializedValue}`
+            );
+          }
+          variantValues.add(serializedValue);
+        }
       }
     }
 

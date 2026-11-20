@@ -61,7 +61,7 @@
               "boolean",
               "null"
             ],
-            "description": "Default remote configuration value before overrides",
+            "description": "Default remote configuration value; for MULTIVARIATE flags this is the control/baseline value",
             "default": null
           },
           "variants": {
@@ -76,13 +76,13 @@
                     "boolean",
                     "null"
                   ],
-                  "description": "Variant value served to clients"
+                  "description": "Challenger value served to clients; must differ from the control value"
                 },
                 "percentage": {
                   "type": "number",
                   "minimum": 0,
                   "maximum": 100,
-                  "description": "Percentage of traffic allocated to this variant (0-100)"
+                  "description": "Percentage of traffic allocated to this challenger (0-100); the control receives the remainder"
                 }
               },
               "required": [
@@ -90,10 +90,10 @@
                 "percentage"
               ],
               "additionalProperties": false,
-              "description": "Traffic split variant for multivariate experiments"
+              "description": "Challenger arm for a multivariate experiment"
             },
             "default": [],
-            "description": "Traffic split variants for MULTIVARIATE experiment flags (must sum to 100%)"
+            "description": "Challenger variants for MULTIVARIATE flags; percentages must total 100% or less and the control receives the remainder"
           },
           "target_metric": {
             "type": "object",

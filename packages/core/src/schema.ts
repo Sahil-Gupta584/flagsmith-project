@@ -10,9 +10,9 @@ export const FlagValueSchema = z.union([
 ]).describe('Remote configuration value (string, number, boolean, or null)');
 
 export const MultivariateVariantSchema = z.object({
-  value: FlagValueSchema.describe('Variant value served to clients'),
-  percentage: z.number().min(0).max(100).describe('Percentage of traffic allocated to this variant (0-100)'),
-}).describe('Traffic split variant for multivariate experiments');
+  value: FlagValueSchema.describe('Challenger value served to clients; must differ from the control value'),
+  percentage: z.number().min(0).max(100).describe('Percentage of traffic allocated to this challenger (0-100); the control receives the remainder'),
+}).describe('Challenger arm for a multivariate experiment');
 
 export const EnvironmentOverrideSchema = z.object({
   name: z.string().min(1, 'Environment name is required').describe('Exact Flagsmith environment name (e.g. Production)'),
@@ -32,8 +32,8 @@ export const FlagDefinitionSchema = z.object({
   description: z.string().optional().default('').describe('Human-readable description explaining the purpose of this flag'),
   type: z.enum(['STANDARD', 'MULTIVARIATE']).optional().default('STANDARD').describe('Flag type: STANDARD (simple toggle/remote config) or MULTIVARIATE (A/B experiment)'),
   default_enabled: z.boolean().optional().default(false).describe('Default baseline state across all environments before overrides'),
-  value: FlagValueSchema.optional().default(null).describe('Default remote configuration value before overrides'),
-  variants: z.array(MultivariateVariantSchema).optional().default([]).describe('Traffic split variants for MULTIVARIATE experiment flags (must sum to 100%)'),
+  value: FlagValueSchema.optional().default(null).describe('Default remote configuration value; for MULTIVARIATE flags this is the control/baseline value'),
+  variants: z.array(MultivariateVariantSchema).optional().default([]).describe('Challenger variants for MULTIVARIATE flags; percentages must total 100% or less and the control receives the remainder'),
   target_metric: ExperimentMetricSchema.optional().describe('Flagsmith target experiment metric'),
   environments: z.array(EnvironmentOverrideSchema).optional().default([]).describe('Environment-specific overrides, one entry per environment (e.g. [{ name: Production, enabled: true }])'),
   archived: z.boolean().optional().default(false).describe('Whether this feature flag is archived'),

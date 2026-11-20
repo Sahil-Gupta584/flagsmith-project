@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   computePlan,
   generateManifestFromRemote,
+  getTemplateFlags,
   parseYamlContent,
   serializeFlagsManifest,
   type FlagsManifest,
@@ -63,7 +64,7 @@ flags:
   assert.ok(res.errors?.some((e) => e.includes("Duplicate flag key found: 'dup_key'")));
 });
 
-test('YAML Parser - catches multivariate percentage sum != 100%', () => {
+test('YAML Parser - accepts multivariate allocation below 100% for control remainder', () => {
   const yaml = `
 version: 1
 project:
@@ -71,6 +72,7 @@ project:
 flags:
   - key: cta_experiment
     type: MULTIVARIATE
+    value: "Control"
     variants:
       - value: "A"
         percentage: 30
@@ -78,8 +80,78 @@ flags:
         percentage: 30
 `;
   const res = parseYamlContent(yaml);
+  assert.equal(res.success, true);
+  assert.equal(res.data?.flags[0].value, 'Control');
+  assert.equal(res.data?.flags[0].variants.length, 2);
+});
+
+test('YAML Parser - catches multivariate allocation over 100%', () => {
+  const yaml = `
+version: 1
+project:
+  id: 100
+flags:
+  - key: cta_experiment
+    type: MULTIVARIATE
+    value: "Control"
+    variants:
+      - value: "A"
+        percentage: 60
+      - value: "B"
+        percentage: 60
+`;
+  const res = parseYamlContent(yaml);
   assert.equal(res.success, false);
-  assert.ok(res.errors?.some((e) => e.includes('must equal 100%')));
+  assert.ok(res.errors?.some((e) => e.includes('must not exceed 100%')));
+});
+
+test('YAML Parser - rejects a variant that duplicates the control value', () => {
+  const yaml = `
+version: 1
+project:
+  id: 100
+flags:
+  - key: cta_experiment
+    type: MULTIVARIATE
+    value: "Control"
+    variants:
+      - value: "Control"
+        percentage: 50
+`;
+  const res = parseYamlContent(yaml);
+  assert.equal(res.success, false);
+  assert.ok(res.errors?.some((e) => e.includes('duplicates the control value')));
+});
+
+test('YAML Parser - rejects a MULTIVARIATE flag without challengers', () => {
+  const yaml = `
+version: 1
+project:
+  id: 100
+flags:
+  - key: empty_experiment
+    type: MULTIVARIATE
+    value: "Control"
+`;
+  const res = parseYamlContent(yaml);
+  assert.equal(res.success, false);
+  assert.ok(res.errors?.some((e) => e.includes('has no variants')));
+});
+
+test('YAML Parser - rejects variants on a STANDARD flag', () => {
+  const yaml = `
+version: 1
+project:
+  id: 100
+flags:
+  - key: simple_flag
+    variants:
+      - value: "A"
+        percentage: 50
+`;
+  const res = parseYamlContent(yaml);
+  assert.equal(res.success, false);
+  assert.ok(res.errors?.some((e) => e.includes('set type: MULTIVARIATE')));
 });
 
 test('YAML Parser - parses and validates target_metric for experiments', () => {
@@ -97,9 +169,9 @@ flags:
       direction: up
     variants:
       - value: "bm25"
-        percentage: 50
+        percentage: 40
       - value: "vector"
-        percentage: 50
+        percentage: 40
 `;
   const res = parseYamlContent(yaml);
   assert.equal(res.success, true);
@@ -117,6 +189,57 @@ test('YAML Serializer - includes schema directive for IDE autocomplete', () => {
   const yaml = serializeFlagsManifest(manifest);
   assert.match(yaml, /^# yaml-language-server: \$schema=https:\/\/cdn\.jsdelivr\.net\//);
   assert.match(yaml, /# Run "fm diff" to preview/);
+});
+
+test('Templates - multivariate flags use challenger-only variants', () => {
+  const environments: Environment[] = [
+    { id: 1, name: 'Production', api_key: 'prod_key', project: 100 },
+    { id: 2, name: 'Development', api_key: 'dev_key', project: 100 },
+  ];
+
+  for (const template of ['ai', 'saas', 'ecommerce'] as const) {
+    const flags = getTemplateFlags(template, environments);
+    const multivariateFlags = flags.filter((flag) => flag.type === 'MULTIVARIATE');
+
+    assert.ok(multivariateFlags.length > 0, `${template} should include an experiment`);
+    for (const flag of multivariateFlags) {
+      assert.ok(flag.variants.length > 0, `${flag.key} should have a challenger`);
+      assert.ok(
+        flag.variants.reduce((sum, variant) => sum + variant.percentage, 0) <= 100,
+        `${flag.key} allocations should leave room for the control`
+      );
+      assert.ok(
+        flag.variants.every((variant) => variant.value !== flag.value),
+        `${flag.key} should not repeat the control in variants`
+      );
+    }
+  }
+});
+
+test('Templates - SaaS uses generic flags and a single challenger headline', () => {
+  const environments: Environment[] = [
+    { id: 1, name: 'Production', api_key: 'prod_key', project: 100 },
+    { id: 2, name: 'Development', api_key: 'dev_key', project: 100 },
+  ];
+  const flags = getTemplateFlags('saas', environments);
+  const keys = flags.map((flag) => flag.key);
+
+  assert.ok(keys.includes('hero_headline'));
+  assert.ok(keys.includes('email_verification_required'));
+  assert.ok(keys.includes('team_invites_enabled'));
+  assert.ok(!keys.includes('new_billing_portal'));
+  assert.ok(!keys.includes('navigation_redesign'));
+
+  const hero = flags.find((flag) => flag.key === 'hero_headline');
+  assert.ok(hero);
+  assert.equal(hero.value, 'Ship features faster');
+  assert.deepEqual(hero.variants, [
+    { value: 'Launch with confidence', percentage: 50 },
+  ]);
+  assert.equal(
+    hero.environments.find((env) => env.name === 'Production')?.value,
+    undefined
+  );
 });
 
 test('Reconciler - detects new feature to create', () => {
@@ -146,6 +269,46 @@ test('Reconciler - detects new feature to create', () => {
   assert.equal(plan.creates[0].key, 'new_flag');
   assert.equal(plan.summary.createCount, 1);
   assert.equal(plan.summary.totalChanges, 1);
+});
+
+test('Reconciler - creates multivariate feature with control and challenger options', () => {
+  const manifest: FlagsManifest = {
+    version: 1,
+    project: { id: 100 },
+    flags: [
+      {
+        key: 'hero_headline',
+        description: '',
+        type: 'MULTIVARIATE',
+        default_enabled: true,
+        value: 'Ship features faster',
+        variants: [
+          { value: 'Launch with confidence', percentage: 30 },
+        ],
+        environments: [],
+        archived: false,
+      },
+    ],
+  };
+
+  const plan = computePlan(
+    manifest,
+    [],
+    [{ id: 1, name: 'production', api_key: 'prod_key', project: 100 }],
+    new Map()
+  );
+
+  assert.equal(plan.creates.length, 1);
+  assert.equal(plan.creates[0].payload.initial_value, 'Ship features faster');
+  assert.deepEqual(plan.creates[0].payload.multivariate_options, [
+    {
+      type: 'unicode',
+      string_value: 'Launch with confidence',
+      integer_value: null,
+      boolean_value: null,
+      default_percentage_allocation: 30,
+    },
+  ]);
 });
 
 test('Reconciler - detects environment override changes', () => {

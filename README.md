@@ -151,8 +151,6 @@ flags:
       aggregation: "occurrence"
       direction: "up"
     variants:
-      - value: "blue"
-        percentage: 50
       - value: "green"
         percentage: 50
     environments:
@@ -178,4 +176,33 @@ environments:
 - `value` is optional. If omitted, the environment inherits the flag's root `value`. Set it only when that environment needs a different value.
 
 For multivariate flags, the root `value` is the control arm. Environment values override the control in that environment; experiment variants and their traffic split remain feature-level. Duplicate environment names in one flag are rejected.
+
+### How multivariate experiments work
+
+The root `value` is the **control**. `variants` contains only the **challengers**:
+
+```yaml
+- key: hero_button_color
+  type: MULTIVARIATE
+  value: "blue"                 # control
+  variants:
+    - value: "green"            # challenger
+      percentage: 50
+```
+
+The challenger gets 50%, so the control receives the remaining 50%.
+
+With two challengers:
+
+```yaml
+  value: "control"
+  variants:
+    - value: "variant-a"
+      percentage: 30
+    - value: "variant-b"
+      percentage: 30
+# control receives 40%
+```
+
+Variant percentages must total **100% or less**. The control is not listed in `variants`; repeating the control value there is rejected.
 
