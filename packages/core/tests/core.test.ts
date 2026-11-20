@@ -374,15 +374,24 @@ test('Reconciler - detects environment override changes', () => {
   assert.equal(plan.envStateUpdates[0].payload.feature_state_value, 'v2');
 });
 
-test('Reconciler - pull produces a named environment array', () => {
+test('Reconciler - pull produces named environments and challenger variants', () => {
   const remoteFeatures: Feature[] = [
     {
       id: 42,
       name: 'hero_headline',
-      type: 'STANDARD',
+      type: 'MULTIVARIATE',
       default_enabled: true,
       initial_value: 'Ship features faster',
       description: '',
+      multivariate_options: [
+        {
+          type: 'unicode',
+          string_value: 'Launch with confidence',
+          integer_value: null,
+          boolean_value: null,
+          default_percentage_allocation: 30,
+        },
+      ],
     },
   ];
   const remoteEnvs: Environment[] = [
@@ -427,6 +436,9 @@ test('Reconciler - pull produces a named environment array', () => {
   assert.deepEqual(manifest.flags[0].environments, [
     { name: 'Production', enabled: true, value: 'Ship features faster' },
     { name: 'Development', enabled: true, value: 'Ship features faster (dev)' },
+  ]);
+  assert.deepEqual(manifest.flags[0].variants, [
+    { value: 'Launch with confidence', percentage: 30 },
   ]);
 });
 

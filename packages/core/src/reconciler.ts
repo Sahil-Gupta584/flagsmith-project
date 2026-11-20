@@ -270,7 +270,10 @@ export function computePlan(
             type: f.type || 'STANDARD',
             default_enabled: f.default_enabled,
             value: f.initial_value ?? null,
-            variants: [],
+            variants: (f.multivariate_options ?? []).map((option) => ({
+              value: option.string_value ?? option.integer_value ?? option.boolean_value ?? null,
+              percentage: option.default_percentage_allocation,
+            })),
             environments,
             archived: f.is_archived || false,
           };
