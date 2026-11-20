@@ -15,9 +15,10 @@ export const MultivariateVariantSchema = z.object({
 }).describe('Traffic split variant for multivariate experiments');
 
 export const EnvironmentOverrideSchema = z.object({
+  name: z.string().min(1, 'Environment name is required').describe('Exact Flagsmith environment name (e.g. Production)'),
   enabled: z.boolean().describe('Whether the flag is enabled in this environment'),
-  value: FlagValueSchema.optional().default(null).describe('Environment-specific remote config override value'),
-}).describe('Environment-specific flag state and value overrides');
+  value: FlagValueSchema.optional().describe('Environment-specific value override; inherits the flag value when omitted'),
+}).describe('Flag state override for one named environment');
 
 export const ExperimentMetricSchema = z.object({
   name: z.string().min(1, 'Metric name is required').describe('Unique name of the experiment metric event (e.g. signup_completed)'),
@@ -34,7 +35,7 @@ export const FlagDefinitionSchema = z.object({
   value: FlagValueSchema.optional().default(null).describe('Default remote configuration value before overrides'),
   variants: z.array(MultivariateVariantSchema).optional().default([]).describe('Traffic split variants for MULTIVARIATE experiment flags (must sum to 100%)'),
   target_metric: ExperimentMetricSchema.optional().describe('Flagsmith target experiment metric'),
-  environments: z.record(z.string(), EnvironmentOverrideSchema).optional().default({}).describe('Environment-specific overrides (e.g. Production: { enabled: true })'),
+  environments: z.array(EnvironmentOverrideSchema).optional().default([]).describe('Environment-specific overrides, one entry per environment (e.g. [{ name: Production, enabled: true }])'),
   archived: z.boolean().optional().default(false).describe('Whether this feature flag is archived'),
 }).describe('Feature flag or experiment definition');
 

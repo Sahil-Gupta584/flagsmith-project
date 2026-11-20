@@ -156,7 +156,7 @@ export function computePlan(
 
       // Check environment overrides for this existing feature
       for (const env of remoteEnvironments) {
-        const envOverride = flagDef.environments[env.name];
+        const envOverride = flagDef.environments.find((item) => item.name === env.name);
         if (!envOverride) continue;
 
         const liveStates = remoteStatesByEnv.get(env.name) || [];
@@ -175,16 +175,16 @@ export function computePlan(
             statePayload.enabled = envOverride.enabled;
           }
 
-          if (
-            envOverride.value !== undefined &&
-            liveState.feature_state_value !== envOverride.value
-          ) {
+          const desiredValue =
+            envOverride.value !== undefined ? envOverride.value : (flagDef.value ?? null);
+
+          if (liveState.feature_state_value !== desiredValue) {
             envChanges.push({
               property: 'value',
               from: liveState.feature_state_value,
-              to: envOverride.value,
+              to: desiredValue,
             });
-            statePayload.feature_state_value = envOverride.value;
+            statePayload.feature_state_value = desiredValue;
           }
 
           if (envChanges.length > 0) {
@@ -250,16 +250,17 @@ export function computePlan(
         remoteStatesByEnv: Map<string, FeatureState[]>
       ): FlagsManifest {
         const flags: FlagDefinition[] = remoteFeatures.map((f) => {
-          const environments: Record<string, { enabled: boolean; value: any }> = {};
+          const environments: FlagDefinition['environments'] = [];
 
           for (const env of remoteEnvironments) {
             const states = remoteStatesByEnv.get(env.name) || [];
             const st = states.find((s) => s.feature === f.id);
             if (st) {
-              environments[env.name] = {
+              environments.push({
+                name: env.name,
                 enabled: st.enabled,
                 value: st.feature_state_value ?? null,
-              };
+              });
             }
           }
 

@@ -78,15 +78,13 @@ export async function applyCommand(options: ApplyCommandOptions = {}): Promise<v
     const createdFeature = await client.createFeature(plan.projectId, createAction.payload);
 
     // If the YAML also defines environment overrides for this new feature, apply them now
-    if (createAction.flagDef.environments) {
-      for (const env of environments) {
-        const override = createAction.flagDef.environments[env.name];
-        if (override) {
-          await client.updateEnvironmentFeature(env.api_key, createdFeature.id, {
-            enabled: override.enabled,
-            value: override.value,
-          });
-        }
+    for (const env of environments) {
+      const override = createAction.flagDef.environments.find((item) => item.name === env.name);
+      if (override) {
+        await client.updateEnvironmentFeature(env.api_key, createdFeature.id, {
+          enabled: override.enabled,
+          value: override.value !== undefined ? override.value : (createAction.flagDef.value ?? null),
+        });
       }
     }
   }

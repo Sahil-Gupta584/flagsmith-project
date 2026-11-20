@@ -49,6 +49,16 @@ export function parseYamlContent(content: string): ParseResult {
         );
       }
     }
+
+    const envNamesSeen = new Set<string>();
+    for (const envOverride of flag.environments) {
+      if (envNamesSeen.has(envOverride.name)) {
+        semanticErrors.push(
+          `Flag '${flag.key}' has duplicate environment override for '${envOverride.name}'`
+        );
+      }
+      envNamesSeen.add(envOverride.name);
+    }
   }
 
   if (semanticErrors.length > 0) {

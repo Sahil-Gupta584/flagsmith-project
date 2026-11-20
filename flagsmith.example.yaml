@@ -13,12 +13,10 @@ flags:
     value: null
     variants: []
     environments:
-      development:
+      - name: development
         enabled: false
-        value: null
-      production:
+      - name: production
         enabled: false
-        value: null
     archived: false
 
   - key: new_billing_portal
@@ -28,12 +26,10 @@ flags:
     value: null
     variants: []
     environments:
-      development:
+      - name: development
         enabled: true
-        value: null
-      production:
+      - name: production
         enabled: false
-        value: null
     archived: false
 
   - key: workspace_team_invites
@@ -43,12 +39,10 @@ flags:
     value: null
     variants: []
     environments:
-      development:
+      - name: development
         enabled: true
-        value: null
-      production:
+      - name: production
         enabled: true
-        value: null
     archived: false
 
   - key: api_rate_limit_rpm
@@ -58,10 +52,10 @@ flags:
     value: 120
     variants: []
     environments:
-      development:
+      - name: development
         enabled: true
         value: 120
-      production:
+      - name: production
         enabled: true
         value: 600
     archived: false
@@ -73,12 +67,10 @@ flags:
     value: null
     variants: []
     environments:
-      development:
+      - name: development
         enabled: true
-        value: null
-      production:
+      - name: production
         enabled: false
-        value: null
     archived: false
 
   - key: onboarding_checklist
@@ -88,12 +80,10 @@ flags:
     value: null
     variants: []
     environments:
-      development:
+      - name: development
         enabled: true
-        value: null
-      production:
+      - name: production
         enabled: true
-        value: null
     archived: false
 
   - key: navigation_redesign
@@ -112,7 +102,6 @@ flags:
       - value: "topbar"
         percentage: 50
     environments:
-      production:
+      - name: production
         enabled: true
-        value: "sidebar"
     archived: false

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computePlan,
+  generateManifestFromRemote,
   parseYamlContent,
   serializeFlagsManifest,
   type FlagsManifest,
@@ -19,14 +20,33 @@ flags:
     description: "Sample flag"
     default_enabled: false
     environments:
-      dev:
+      - name: dev
         enabled: true
 `;
   const res = parseYamlContent(yaml);
   assert.equal(res.success, true);
   assert.equal(res.data?.flags.length, 1);
   assert.equal(res.data?.flags[0].key, 'test_feature');
-  assert.equal(res.data?.flags[0].environments['dev'].enabled, true);
+  assert.equal(res.data?.flags[0].environments[0].name, 'dev');
+  assert.equal(res.data?.flags[0].environments[0].enabled, true);
+});
+
+test('YAML Parser - catches duplicate environment overrides', () => {
+  const yaml = `
+version: 1
+project:
+  id: 100
+flags:
+  - key: test_feature
+    environments:
+      - name: production
+        enabled: true
+      - name: production
+        enabled: false
+`;
+  const res = parseYamlContent(yaml);
+  assert.equal(res.success, false);
+  assert.ok(res.errors?.some((e) => e.includes("duplicate environment override for 'production'")));
 });
 
 test('YAML Parser - catches duplicate keys', () => {
@@ -111,7 +131,7 @@ test('Reconciler - detects new feature to create', () => {
         default_enabled: true,
         value: null,
         variants: [],
-        environments: {},
+        environments: [],
         archived: false,
       },
     ],
@@ -140,12 +160,13 @@ test('Reconciler - detects environment override changes', () => {
         default_enabled: false,
         value: null,
         variants: [],
-        environments: {
-          production: {
+        environments: [
+          {
+            name: 'production',
             enabled: true,
             value: 'v2',
           },
-        },
+        ],
         archived: false,
       },
     ],
@@ -188,6 +209,121 @@ test('Reconciler - detects environment override changes', () => {
   assert.equal(plan.envStateUpdates[0].environmentName, 'production');
   assert.equal(plan.envStateUpdates[0].payload.enabled, true);
   assert.equal(plan.envStateUpdates[0].payload.feature_state_value, 'v2');
+});
+
+test('Reconciler - pull produces a named environment array', () => {
+  const remoteFeatures: Feature[] = [
+    {
+      id: 42,
+      name: 'hero_headline',
+      type: 'STANDARD',
+      default_enabled: true,
+      initial_value: 'Ship features faster',
+      description: '',
+    },
+  ];
+  const remoteEnvs: Environment[] = [
+    { id: 1, name: 'Production', api_key: 'prod_key', project: 100 },
+    { id: 2, name: 'Development', api_key: 'dev_key', project: 100 },
+  ];
+  const remoteStates = new Map<string, FeatureState[]>([
+    [
+      'Production',
+      [
+        {
+          id: 501,
+          feature: 42,
+          environment: 1,
+          enabled: true,
+          feature_state_value: 'Ship features faster',
+        },
+      ],
+    ],
+    [
+      'Development',
+      [
+        {
+          id: 502,
+          feature: 42,
+          environment: 2,
+          enabled: true,
+          feature_state_value: 'Ship features faster (dev)',
+        },
+      ],
+    ],
+  ]);
+
+  const manifest = generateManifestFromRemote(
+    100,
+    'Demo',
+    remoteFeatures,
+    remoteEnvs,
+    remoteStates
+  );
+
+  assert.deepEqual(manifest.flags[0].environments, [
+    { name: 'Production', enabled: true, value: 'Ship features faster' },
+    { name: 'Development', enabled: true, value: 'Ship features faster (dev)' },
+  ]);
+});
+
+test('Reconciler - environment value inherits flag value when omitted', () => {
+  const manifest: FlagsManifest = {
+    version: 1,
+    project: { id: 100 },
+    flags: [
+      {
+        key: 'hero_headline',
+        description: '',
+        type: 'STANDARD',
+        default_enabled: true,
+        value: 'Ship features faster',
+        variants: [],
+        environments: [
+          {
+            name: 'production',
+            enabled: true,
+          },
+        ],
+        archived: false,
+      },
+    ],
+  };
+
+  const remoteFeatures: Feature[] = [
+    {
+      id: 42,
+      name: 'hero_headline',
+      type: 'STANDARD',
+      default_enabled: true,
+      initial_value: 'Ship features faster',
+      description: '',
+    },
+  ];
+  const remoteEnvs: Environment[] = [
+    { id: 1, name: 'production', api_key: 'prod_key', project: 100 },
+  ];
+  const remoteStates = new Map<string, FeatureState[]>([
+    [
+      'production',
+      [
+        {
+          id: 501,
+          feature: 42,
+          environment: 1,
+          enabled: true,
+          feature_state_value: 'Old headline',
+        },
+      ],
+    ],
+  ]);
+
+  const plan = computePlan(manifest, remoteFeatures, remoteEnvs, remoteStates);
+  assert.equal(plan.envStateUpdates.length, 1);
+  assert.equal(
+    plan.envStateUpdates[0].payload.feature_state_value,
+    'Ship features faster'
+  );
 });
 
   test('Reconciler - marks absent remote flags for deletion by default (1-to-1 mirror)', () => {

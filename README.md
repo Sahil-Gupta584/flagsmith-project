@@ -133,15 +133,12 @@ flags:
     default_enabled: false
     value: null
     environments:
-      development:
+      - name: development
         enabled: true
-        value: null
-      staging:
+      - name: staging
         enabled: true
-        value: null
-      production:
+      - name: production
         enabled: false
-        value: null
 
   - key: hero_button_color
     description: "Multivariate A/B experiment on CTA button color"
@@ -159,8 +156,26 @@ flags:
       - value: "green"
         percentage: 50
     environments:
-      production:
+      - name: production
         enabled: true
-        value: "blue"
 ```
+
+### How environment overrides work
+
+`environments` is a list, and each item targets one environment by name:
+
+```yaml
+environments:
+  - name: development     # must match the Flagsmith environment name exactly
+    enabled: true
+  - name: production
+    enabled: false
+    value: "custom-production-value"
+```
+
+- `name` selects the environment. Names are case-sensitive.
+- `enabled` controls whether the flag is on in that environment.
+- `value` is optional. If omitted, the environment inherits the flag's root `value`. Set it only when that environment needs a different value.
+
+For multivariate flags, the root `value` is the control arm. Environment values override the control in that environment; experiment variants and their traffic split remain feature-level. Duplicate environment names in one flag are rejected.
 

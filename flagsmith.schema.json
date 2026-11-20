@@ -136,10 +136,15 @@
             "description": "Flagsmith target experiment metric"
           },
           "environments": {
-            "type": "object",
-            "additionalProperties": {
+            "type": "array",
+            "items": {
               "type": "object",
               "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Exact Flagsmith environment name (e.g. Production)"
+                },
                 "enabled": {
                   "type": "boolean",
                   "description": "Whether the flag is enabled in this environment"
@@ -151,18 +156,18 @@
                     "boolean",
                     "null"
                   ],
-                  "description": "Environment-specific remote config override value",
-                  "default": null
+                  "description": "Environment-specific value override; inherits the flag value when omitted"
                 }
               },
               "required": [
+                "name",
                 "enabled"
               ],
               "additionalProperties": false,
-              "description": "Environment-specific flag state and value overrides"
+              "description": "Flag state override for one named environment"
             },
-            "default": {},
-            "description": "Environment-specific overrides (e.g. Production: { enabled: true })"
+            "default": [],
+            "description": "Environment-specific overrides, one entry per environment (e.g. [{ name: Production, enabled: true }])"
           },
           "archived": {
             "type": "boolean",

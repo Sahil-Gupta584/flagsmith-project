@@ -1,7 +1,14 @@
 import type { Environment } from '@repo/api-client';
-import type { FlagDefinition } from './schema.js';
+import type { EnvironmentOverride, FlagDefinition, FlagValue } from './schema.js';
 
 export type TemplateType = 'ai' | 'saas' | 'ecommerce' | 'blank';
+
+function environmentOverrides(
+  environments: Environment[],
+  resolve: (env: Environment) => { enabled: boolean; value?: FlagValue }
+): EnvironmentOverride[] {
+  return environments.map((env) => ({ name: env.name, ...resolve(env) }));
+}
 
 export function getTemplateFlags(
   template: TemplateType,
@@ -32,12 +39,10 @@ export function getTemplateFlags(
           { value: 'gemini-2.0-flash', percentage: 70 },
           { value: 'gpt-4o-mini', percentage: 30 },
         ],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: 'gemini-2.0-flash' },
-          ])
-        ),
+        environments: environmentOverrides(environments, () => ({
+          enabled: true,
+          value: 'gemini-2.0-flash',
+        })),
         archived: false,
       },
       {
@@ -47,12 +52,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: 2048,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: isProduction(env.name) ? 4096 : 1024 },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: true,
+          value: isProduction(env.name) ? 4096 : 1024,
+        })),
         archived: false,
       },
       {
@@ -62,12 +65,10 @@ export function getTemplateFlags(
         default_enabled: false,
         value: null,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: !isProduction(env.name), value: null },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: !isProduction(env.name),
+          value: null,
+        })),
         archived: false,
       },
       {
@@ -77,12 +78,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: null,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: null },
-          ])
-        ),
+        environments: environmentOverrides(environments, () => ({
+          enabled: true,
+          value: null,
+        })),
         archived: false,
       },
       {
@@ -92,12 +91,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: 3,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: isProduction(env.name) ? 6 : 3 },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: true,
+          value: isProduction(env.name) ? 6 : 3,
+        })),
         archived: false,
       },
       {
@@ -107,12 +104,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: 'v2.1',
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: isProduction(env.name) ? 'v2.1' : 'v2.2-rc' },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: true,
+          value: isProduction(env.name) ? 'v2.1' : 'v2.2-rc',
+        })),
         archived: false,
       },
     ];
@@ -128,12 +123,10 @@ export function getTemplateFlags(
         default_enabled: false,
         value: null,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: false, value: null },
-          ])
-        ),
+        environments: environmentOverrides(environments, () => ({
+          enabled: false,
+          value: null,
+        })),
         archived: false,
       },
       {
@@ -143,12 +136,10 @@ export function getTemplateFlags(
         default_enabled: false,
         value: null,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: !isProduction(env.name), value: null },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: !isProduction(env.name),
+          value: null,
+        })),
         archived: false,
       },
       {
@@ -158,12 +149,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: null,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: null },
-          ])
-        ),
+        environments: environmentOverrides(environments, () => ({
+          enabled: true,
+          value: null,
+        })),
         archived: false,
       },
       {
@@ -173,12 +162,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: 120,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: isProduction(env.name) ? 600 : 120 },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: true,
+          value: isProduction(env.name) ? 600 : 120,
+        })),
         archived: false,
       },
       {
@@ -188,12 +175,10 @@ export function getTemplateFlags(
         default_enabled: false,
         value: null,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: !isProduction(env.name), value: null },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: !isProduction(env.name),
+          value: null,
+        })),
         archived: false,
       },
       {
@@ -203,12 +188,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: null,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: null },
-          ])
-        ),
+        environments: environmentOverrides(environments, () => ({
+          enabled: true,
+          value: null,
+        })),
         archived: false,
       },
       {
@@ -227,12 +210,10 @@ export function getTemplateFlags(
           { value: 'sidebar', percentage: 50 },
           { value: 'topbar', percentage: 50 },
         ],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: 'sidebar' },
-          ])
-        ),
+        environments: environmentOverrides(environments, () => ({
+          enabled: true,
+          value: 'sidebar',
+        })),
         archived: false,
       },
     ];
@@ -248,12 +229,10 @@ export function getTemplateFlags(
         default_enabled: false,
         value: null,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: !isProduction(env.name), value: null },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: !isProduction(env.name),
+          value: null,
+        })),
         archived: false,
       },
       {
@@ -263,12 +242,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: 'Free worldwide shipping on orders over $50!',
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: 'Free worldwide shipping on orders over $50!' },
-          ])
-        ),
+        environments: environmentOverrides(environments, () => ({
+          enabled: true,
+          value: 'Free worldwide shipping on orders over $50!',
+        })),
         archived: false,
       },
       {
@@ -287,12 +264,10 @@ export function getTemplateFlags(
           { value: 'collaborative', percentage: 50 },
           { value: 'trending', percentage: 50 },
         ],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: 'collaborative' },
-          ])
-        ),
+        environments: environmentOverrides(environments, () => ({
+          enabled: true,
+          value: 'collaborative',
+        })),
         archived: false,
       },
       {
@@ -302,12 +277,10 @@ export function getTemplateFlags(
         default_enabled: true,
         value: 10,
         variants: [],
-        environments: Object.fromEntries(
-          environments.map((env) => [
-            env.name,
-            { enabled: true, value: isProduction(env.name) ? 10 : 20 },
-          ])
-        ),
+        environments: environmentOverrides(environments, (env) => ({
+          enabled: true,
+          value: isProduction(env.name) ? 10 : 20,
+        })),
         archived: false,
       },
     ];
